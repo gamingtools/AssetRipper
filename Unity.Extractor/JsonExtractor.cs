@@ -39,6 +39,15 @@ internal class JsonExtractor
     {
         var json = new JsonWalker(asset.Collection).SerializeStandard(asset);
         var jObject = JObject.Parse(json);
+        var toRemove = (jObject.Properties()
+            .Where(property => property.Value.Type == JTokenType.Object)
+            .Where(property => property.Value["m_PathID"]?.ToObject<int>() == 0 && property.Value["m_FileID"]?.ToObject<int>() == 0)
+            .Select(property => property.Name)).ToList();
+
+        foreach (var propertyName in toRemove)
+        {
+            jObject.Remove(propertyName);
+        }
 
         string name = null;
         string ns = null;
