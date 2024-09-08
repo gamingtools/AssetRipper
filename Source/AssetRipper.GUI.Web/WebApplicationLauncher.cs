@@ -47,16 +47,40 @@ public static class WebApplicationLauncher
 			getDefaultValue: () => Defaults.LaunchBrowser);
 		rootCommand.AddOption(launchBrowserOption);
 
+		Option<string[]> localWebFilesOption = new Option<string[]>(
+			name: "--local-web-file",
+			description: "Files provided with this option will replace online sources.",
+			getDefaultValue: () => []);
+		rootCommand.AddOption(localWebFilesOption);
+
 		bool shouldRun = false;
 		int port = Defaults.Port;
 		bool launchBrowser = Defaults.LaunchBrowser;
 
-		rootCommand.SetHandler((int portParsed, bool launchBrowserParsed) =>
+		rootCommand.SetHandler((int portParsed, bool launchBrowserParsed, string[] localWebFilesParsed) =>
 		{
 			shouldRun = true;
 			port = portParsed;
 			launchBrowser = launchBrowserParsed;
-		}, portOption, launchBrowserOption);
+			foreach (string localWebFile in localWebFilesParsed)
+			{
+				if (File.Exists(localWebFile))
+				{
+					string fileName = Path.GetFileName(localWebFile);
+					string webPrefix = Path.GetExtension(fileName) switch
+					{
+						".css" => "/css/",
+						".js" => "/js/",
+						_ => "/"
+					};
+					StaticContentLoader.Cache.TryAdd(webPrefix + fileName, File.ReadAllBytes(localWebFile));
+				}
+				else
+				{
+					Console.WriteLine($"File '{localWebFile}' does not exist.");
+				}
+			}
+		}, portOption, launchBrowserOption, localWebFilesOption);
 
 		rootCommand.Invoke(args);
 
@@ -116,6 +140,7 @@ public static class WebApplicationLauncher
 		app.MapStaticFile("/css/site.css", "text/css");
 		app.MapStaticFile("/js/site.js", "text/javascript");
 		app.MapStaticFile("/js/commands_page.js", "text/javascript");
+		app.MapStaticFile("/js/mesh_preview.js", "text/javascript");
 
 		//Normal Pages
 		app.MapGet("/", (context) =>
@@ -194,6 +219,7 @@ public static class WebApplicationLauncher
 		//Dialogs
 		app.MapGet("/Dialogs/SaveFile", Dialogs.SaveFile.HandleGetRequest);
 		app.MapGet("/Dialogs/OpenFolder", Dialogs.OpenFolder.HandleGetRequest);
+		app.MapGet("/Dialogs/OpenFolders", Dialogs.OpenFolders.HandleGetRequest);
 		app.MapGet("/Dialogs/OpenFile", Dialogs.OpenFile.HandleGetRequest);
 		app.MapGet("/Dialogs/OpenFiles", Dialogs.OpenFiles.HandleGetRequest);
 

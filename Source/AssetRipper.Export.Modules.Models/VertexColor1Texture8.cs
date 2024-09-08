@@ -6,23 +6,17 @@ using System.Numerics;
 namespace AssetRipper.Export.Modules.Models;
 
 /// <summary>
-/// Defines a Vertex attribute with up to 1 color and up to 8 textures.
+/// Defines a Vertex attribute with 1 color and 8 textures.
 /// </summary>
-internal struct VertexVariable : IVertexMaterial, IEquatable<VertexVariable>
+internal struct VertexColor1Texture8 : IVertexMaterial, IEquatable<VertexColor1Texture8>
 {
 	#region constructors
 
-	public VertexVariable(
-		int maxColors,
-		int maxTextCoords)
+	public VertexColor1Texture8()
 	{
-		MaxColors = int.Clamp(maxColors, 0, 1);
-		MaxTextCoords = int.Clamp(maxTextCoords, 0, 8);
 	}
 
-	public VertexVariable(
-		int maxColors,
-		int maxTextCoords,
+	public VertexColor1Texture8(
 		Vector4 color = default,
 		Vector2 texcoord0 = default,
 		Vector2 texcoord1 = default,
@@ -42,12 +36,9 @@ internal struct VertexVariable : IVertexMaterial, IEquatable<VertexVariable>
 		TexCoord5 = texcoord5;
 		TexCoord6 = texcoord6;
 		TexCoord7 = texcoord7;
-		MaxColors = int.Clamp(maxColors, 0, 1);
-		MaxTextCoords = int.Clamp(maxTextCoords, 0, 8);
 	}
 
-	public VertexVariable(
-		int maxTextCoords,
+	public VertexColor1Texture8(
 		Vector2 texcoord0 = default,
 		Vector2 texcoord1 = default,
 		Vector2 texcoord2 = default,
@@ -55,11 +46,11 @@ internal struct VertexVariable : IVertexMaterial, IEquatable<VertexVariable>
 		Vector2 texcoord4 = default,
 		Vector2 texcoord5 = default,
 		Vector2 texcoord6 = default,
-		Vector2 texcoord7 = default) : this(0, maxTextCoords, default, texcoord0, texcoord1, texcoord2, texcoord3, texcoord4, texcoord5, texcoord6, texcoord7)
+		Vector2 texcoord7 = default) : this(default, texcoord0, texcoord1, texcoord2, texcoord3, texcoord4, texcoord5, texcoord6, texcoord7)
 	{
 	}
 
-	public VertexVariable(IVertexMaterial src)
+	public VertexColor1Texture8(IVertexMaterial src)
 	{
 		ArgumentNullException.ThrowIfNull(src);
 		Color = 0 < src.MaxColors ? src.GetColor(0) : Vector4.One;
@@ -71,8 +62,6 @@ internal struct VertexVariable : IVertexMaterial, IEquatable<VertexVariable>
 		TexCoord5 = 5 < src.MaxTextCoords ? src.GetTexCoord(5) : Vector2.Zero;
 		TexCoord6 = 6 < src.MaxTextCoords ? src.GetTexCoord(6) : Vector2.Zero;
 		TexCoord7 = 7 < src.MaxTextCoords ? src.GetTexCoord(7) : Vector2.Zero;
-		MaxColors = int.Clamp(src.MaxColors, 0, 1);
-		MaxTextCoords = int.Clamp(src.MaxTextCoords, 0, 8);
 	}
 	#endregion
 
@@ -88,15 +77,12 @@ internal struct VertexVariable : IVertexMaterial, IEquatable<VertexVariable>
 	public Vector2 TexCoord6;
 	public Vector2 TexCoord7;
 
-	public readonly int MaxColors { get; }
-	public readonly int MaxTextCoords { get; }
+	public readonly int MaxColors => 1;
+	public readonly int MaxTextCoords => 8;
 
 	readonly IEnumerable<KeyValuePair<string, AttributeFormat>> IVertexReflection.GetEncodingAttributes()
 	{
-		if (MaxColors == 1)
-		{
-			yield return new KeyValuePair<string, AttributeFormat>("COLOR_0", new AttributeFormat(DimensionType.VEC4, EncodingType.UNSIGNED_BYTE, true));
-		}
+		yield return new KeyValuePair<string, AttributeFormat>("COLOR_0", new AttributeFormat(DimensionType.VEC4, EncodingType.UNSIGNED_BYTE, true));
 		for (int i = 0; i < MaxTextCoords; i++)
 		{
 			yield return new KeyValuePair<string, AttributeFormat>($"TEXCOORD_{i}", new AttributeFormat(DimensionType.VEC2));
@@ -115,20 +101,18 @@ internal struct VertexVariable : IVertexMaterial, IEquatable<VertexVariable>
 		hash.Add(TexCoord5);
 		hash.Add(TexCoord6);
 		hash.Add(TexCoord7);
-		hash.Add(MaxColors);
-		hash.Add(MaxTextCoords);
 		return hash.ToHashCode();
 	}
 
-	public readonly override bool Equals(object? obj) { return obj is VertexVariable other ? Equals(other) : false; }
+	public readonly override bool Equals(object? obj) { return obj is VertexColor1Texture8 other ? Equals(other) : false; }
 
-	public readonly bool Equals(VertexVariable other) { return AreEqual(this, other); }
+	public readonly bool Equals(VertexColor1Texture8 other) { return AreEqual(this, other); }
 
-	public static bool operator ==(in VertexVariable a, in VertexVariable b) { return AreEqual(a, b); }
+	public static bool operator ==(in VertexColor1Texture8 a, in VertexColor1Texture8 b) { return AreEqual(a, b); }
 
-	public static bool operator !=(in VertexVariable a, in VertexVariable b) { return !AreEqual(a, b); }
+	public static bool operator !=(in VertexColor1Texture8 a, in VertexColor1Texture8 b) { return !AreEqual(a, b); }
 
-	public static bool AreEqual(in VertexVariable a, in VertexVariable b)
+	public static bool AreEqual(in VertexColor1Texture8 a, in VertexColor1Texture8 b)
 	{
 		return a.Color == b.Color
 			&& a.TexCoord0 == b.TexCoord0
@@ -149,21 +133,14 @@ internal struct VertexVariable : IVertexMaterial, IEquatable<VertexVariable>
 
 	public readonly VertexMaterialDelta Subtract(IVertexMaterial baseValue)
 	{
-		if (MaxTextCoords <= 4)
+		return new()
 		{
-			return new()
-			{
-				Color0Delta = baseValue.MaxColors > 0 ? Color - baseValue.GetColor(0) : default,
-				TexCoord0Delta = baseValue.MaxTextCoords > 0 ? TexCoord0 - baseValue.GetTexCoord(0) : default,
-				TexCoord1Delta = baseValue.MaxTextCoords > 1 ? TexCoord1 - baseValue.GetTexCoord(1) : default,
-				TexCoord2Delta = baseValue.MaxTextCoords > 2 ? TexCoord2 - baseValue.GetTexCoord(2) : default,
-				TexCoord3Delta = baseValue.MaxTextCoords > 3 ? TexCoord3 - baseValue.GetTexCoord(3) : default,
-			};
-		}
-		else
-		{
-			throw new NotSupportedException();
-		}
+			Color0Delta = baseValue.MaxColors > 0 ? Color - baseValue.GetColor(0) : default,
+			TexCoord0Delta = baseValue.MaxTextCoords > 0 ? TexCoord0 - baseValue.GetTexCoord(0) : default,
+			TexCoord1Delta = baseValue.MaxTextCoords > 1 ? TexCoord1 - baseValue.GetTexCoord(1) : default,
+			TexCoord2Delta = baseValue.MaxTextCoords > 2 ? TexCoord2 - baseValue.GetTexCoord(2) : default,
+			TexCoord3Delta = baseValue.MaxTextCoords > 3 ? TexCoord3 - baseValue.GetTexCoord(3) : default,
+		};
 	}
 	public void Add(in VertexMaterialDelta delta)
 	{

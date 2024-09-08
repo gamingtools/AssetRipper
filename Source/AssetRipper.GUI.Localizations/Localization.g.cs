@@ -84,6 +84,11 @@ partial class Localization
 	public static string AssetTabInformation => Get("asset_tab_information");
 	
 	/// <summary>
+	/// Model
+	/// </summary>
+	public static string AssetTabModel => Get("asset_tab_model");
+	
+	/// <summary>
 	/// Text
 	/// </summary>
 	public static string AssetTabText => Get("asset_tab_text");
@@ -448,6 +453,11 @@ partial class Localization
 	/// Export Unity Project
 	/// </summary>
 	public static string ExportUnityProject => Get("export_unity_project");
+	
+	/// <summary>
+	/// Failed Files
+	/// </summary>
+	public static string FailedFiles => Get("failed_files");
 	
 	/// <summary>
 	/// Format
