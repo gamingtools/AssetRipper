@@ -59,7 +59,7 @@ internal class Program
                     case "Transform":
                         {
                             var assetJson = JsonExtractor.Export(asset.Value);
-                            var fileName = Path.Combine(OutputFolder, asset.Value.ClassName, asset.Value.Collection.Name, asset.Value.PathID + ".json");
+                            var fileName = Path.Combine(OutputFolder, asset.Value.ClassName, collection.Name, asset.Value.PathID + ".json");
                             Directory.CreateDirectory(Path.GetDirectoryName(fileName)!);
                             File.WriteAllText(fileName, assetJson);
 
@@ -68,7 +68,7 @@ internal class Program
                     case "GameObject":
                         {
                             var assetJson = JsonExtractor.Export(asset.Value);
-                            var fileName = Path.Combine(OutputFolder, asset.Value.ClassName, asset.Value.Collection.Name, asset.Value.PathID + ".json");
+                            var fileName = Path.Combine(OutputFolder, asset.Value.ClassName, collection.Name, asset.Value.PathID + ".json");
                             Directory.CreateDirectory(Path.GetDirectoryName(fileName)!);
                             File.WriteAllText(fileName, assetJson);
 
@@ -79,7 +79,7 @@ internal class Program
                         {
                             if (asset.Value is not IMonoBehaviour monoBehaviour) continue;
                             var assetJson = JsonExtractor.Export(asset.Value);
-                            var fileName = Path.Combine(OutputFolder, asset.Value.ClassName, asset.Value.Collection.Name, asset.Value.PathID + ".json");
+                            var fileName = Path.Combine(OutputFolder, asset.Value.ClassName, collection.Name, asset.Value.PathID + ".json");
                             Directory.CreateDirectory(Path.GetDirectoryName(fileName)!);
                             File.WriteAllText(fileName, assetJson);
                             if (monoBehaviour.Structure is SerializableStructure structure)
@@ -120,7 +120,7 @@ internal class Program
 
                                 }).ToList()
                             };
-                            var fileName = Path.Combine(OutputFolder, asset.Value.ClassName, asset.Value.Collection.Name, asset.Value.PathID + ".json");
+                            var fileName = Path.Combine(OutputFolder, asset.Value.ClassName, collection.Name, asset.Value.PathID + ".json");
                             Directory.CreateDirectory(Path.GetDirectoryName(fileName)!);
                             File.WriteAllText(fileName, JsonConvert.SerializeObject(spriteData, Formatting.Indented));
                             break;
@@ -132,7 +132,7 @@ internal class Program
                             if (asset.Value is not ITexture2D texture2D) continue;
                             if (!TextureConverter.TryConvertToBitmap(texture2D, out var bitmap)) continue;
 
-                            var fileName = Path.Combine(OutputFolder, asset.Value.ClassName, asset.Value.Collection.Name, asset.Value.PathID + ".png");
+                            var fileName = Path.Combine(OutputFolder, asset.Value.ClassName, collection.Name, asset.Value.PathID + ".png");
                             Directory.CreateDirectory(Path.GetDirectoryName(fileName)!);
                             using var file = new FileStream(fileName, FileMode.Create);
                             bitmap.SaveAsPng(file);
