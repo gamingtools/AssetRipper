@@ -94,6 +94,11 @@ partial class Localization
 	public static string AssetTabText => Get("asset_tab_text");
 	
 	/// <summary>
+	/// Video
+	/// </summary>
+	public static string AssetTabVideo => Get("asset_tab_video");
+	
+	/// <summary>
 	/// Assets
 	/// </summary>
 	public static string Assets => Get("assets");
@@ -746,6 +751,11 @@ partial class Localization
 	public static string NotImplementedYet => Get("not_implemented_yet");
 	
 	/// <summary>
+	/// OpenAPI JSON
+	/// </summary>
+	public static string OpenApiJson => Get("open_api_json");
+	
+	/// <summary>
 	/// Original Path
 	/// </summary>
 	public static string OriginalPath => Get("original_path");
@@ -1034,6 +1044,11 @@ partial class Localization
 	/// Success!
 	/// </summary>
 	public static string Success => Get("success");
+	
+	/// <summary>
+	/// Swagger Documentation
+	/// </summary>
+	public static string SwaggerDocumentation => Get("swagger_documentation");
 	
 	/// <summary>
 	/// Target Version For Version Changing

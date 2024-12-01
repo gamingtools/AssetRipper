@@ -9,8 +9,10 @@ using AssetRipper.Export.PrimaryContent;
 using AssetRipper.Export.UnityProjects;
 using AssetRipper.Export.UnityProjects.Scripts;
 using AssetRipper.Export.UnityProjects.Shaders;
+using AssetRipper.GUI.Web.Documentation;
 using AssetRipper.GUI.Web.Paths;
 using AssetRipper.Import.AssetCreation;
+using AssetRipper.Import.Logging;
 using AssetRipper.Import.Structure.Assembly;
 using AssetRipper.Import.Structure.Assembly.Managers;
 using AssetRipper.Processing.Textures;
@@ -19,6 +21,7 @@ using AssetRipper.SourceGenerated.Classes.ClassID_128;
 using AssetRipper.SourceGenerated.Classes.ClassID_156;
 using AssetRipper.SourceGenerated.Classes.ClassID_213;
 using AssetRipper.SourceGenerated.Classes.ClassID_28;
+using AssetRipper.SourceGenerated.Classes.ClassID_329;
 using AssetRipper.SourceGenerated.Classes.ClassID_43;
 using AssetRipper.SourceGenerated.Classes.ClassID_48;
 using AssetRipper.SourceGenerated.Classes.ClassID_49;
@@ -26,8 +29,10 @@ using AssetRipper.SourceGenerated.Classes.ClassID_83;
 using AssetRipper.SourceGenerated.Extensions;
 using AssetRipper.Web.Extensions;
 using AssetRipper.Yaml;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using SharpGLTF.Scenes;
+using SharpGLTF.Schema2;
 using System.Globalization;
 using System.Runtime.InteropServices;
 
@@ -43,6 +48,7 @@ internal static class AssetAPI
 		public const string Audio = Base + "/Audio";
 		public const string Model = Base + "/Model.glb";
 		public const string Font = Base + "/Font";
+		public const string Video = Base + "/Video";
 		public const string Json = Base + "/Json";
 		public const string Yaml = Base + "/Yaml";
 		public const string Text = Base + "/Text";
@@ -205,8 +211,16 @@ internal static class AssetAPI
 		else
 		{
 			MemoryStream stream = new();
-			SceneBuilder sceneBuilder = GlbMeshBuilder.Build(mesh);
-			sceneBuilder.ToGltf2().WriteGLB(stream);
+			try
+			{
+				SceneBuilder sceneBuilder = GlbMeshBuilder.Build(mesh);
+				sceneBuilder.ToGltf2().WriteGLB(stream, new WriteSettings() { MergeBuffers = false });
+			}
+			catch (Exception ex)
+			{
+				Logger.Error(ex);
+				return context.Response.NotFound("Model data could not be decoded.");
+			}
 			return Results.Bytes(stream.ToArray(), "model/gltf-binary", "model.glb").ExecuteAsync(context);
 		}
 	}
@@ -277,6 +291,41 @@ internal static class AssetAPI
 	}
 	#endregion
 
+	#region Video
+	public static string GetVideoUrl(AssetPath path)
+	{
+		return $"{Urls.Video}?{GetPathQuery(path)}";
+	}
+
+	public static Task GetVideoData(HttpContext context)
+	{
+		//Only accept Path in the query.
+		context.Response.DisableCaching();
+		if (!TryGetAssetFromQuery(context, out IUnityObjectBase? asset, out Task? failureTask))
+		{
+			return failureTask;
+		}
+
+		if (asset is not IVideoClip videoClip)
+		{
+			return context.Response.NotFound("Asset was not a video clip.");
+		}
+		else if (videoClip.TryGetExtensionFromPath(out string? extension) && videoClip.TryGetContent(out byte[]? content))
+		{
+			return Results.Bytes(content, $"video/{extension}", $"{videoClip.GetBestName()}.{extension}").ExecuteAsync(context);
+		}
+		else
+		{
+			return context.Response.NotFound("Video data could not be decoded.");
+		}
+	}
+
+	public static bool HasVideoData(IUnityObjectBase asset)
+	{
+		return asset is IVideoClip clip && clip.CheckIntegrity();
+	}
+	#endregion
+
 	#region Json
 	public static string GetJsonUrl(AssetPath path)
 	{
@@ -290,8 +339,15 @@ internal static class AssetAPI
 			return failureTask;
 		}
 
-		string text = new DefaultJsonWalker().SerializeStandard(asset);
-		return Results.Text(text, "application/json").ExecuteAsync(context);
+		try
+		{
+			string text = new DefaultJsonWalker().SerializeStandard(asset);
+			return Results.Text(text, "application/json").ExecuteAsync(context);
+		}
+		catch (Exception ex)
+		{
+			return Results.Text(ex.ToString()).ExecuteAsync(context);
+		}
 	}
 	#endregion
 
@@ -308,17 +364,24 @@ internal static class AssetAPI
 			return failureTask;
 		}
 
-		string text;
-		using (StringWriter stringWriter = new(CultureInfo.InvariantCulture) { NewLine = "\n" })
+		try
 		{
-			YamlWriter writer = new();
-			writer.WriteHead(stringWriter);
-			YamlDocument document = new YamlWalker().ExportYamlDocument(asset, ExportIdHandler.GetMainExportID(asset));
-			writer.WriteDocument(document);
-			writer.WriteTail(stringWriter);
-			text = stringWriter.ToString();
+			string text;
+			using (StringWriter stringWriter = new(CultureInfo.InvariantCulture) { NewLine = "\n" })
+			{
+				YamlWriter writer = new();
+				writer.WriteHead(stringWriter);
+				YamlDocument document = new YamlWalker().ExportYamlDocument(asset, ExportIdHandler.GetMainExportID(asset));
+				writer.WriteDocument(document);
+				writer.WriteTail(stringWriter);
+				text = stringWriter.ToString();
+			}
+			return Results.Text(text, "application/yaml").ExecuteAsync(context);
 		}
-		return Results.Text(text, "application/yaml").ExecuteAsync(context);
+		catch (Exception ex)
+		{
+			return Results.Text(ex.ToString()).ExecuteAsync(context);
+		}
 	}
 	#endregion
 
@@ -473,5 +536,15 @@ internal static class AssetAPI
 			failureTask = null;
 			return true;
 		}
+	}
+
+	public static RouteHandlerBuilder WithAssetPathParameter(this RouteHandlerBuilder builder)
+	{
+		return builder.WithQueryStringParameter(Path, "Path to the asset", true);
+	}
+
+	public static RouteHandlerBuilder WithImageExtensionParameter(this RouteHandlerBuilder builder)
+	{
+		return builder.WithQueryStringParameter(Extension, "Extension for decoding the image.", true);
 	}
 }
