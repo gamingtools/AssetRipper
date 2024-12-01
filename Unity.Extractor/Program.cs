@@ -38,7 +38,7 @@ internal class Program
     //private const string OutputFolder = @"F:\Pantheon\Data";
     private const string OutputFolder = @"F:\Fractured\Data";
     //private const string AssetsPath = @"I:\Games\Pantheon\App\Pantheon_Data";
-    private const string AssetsPath = @"I:\Games\Fractured Online\app\UnityClient@Windows_Data\resources.assets";
+    private const string AssetsPath = @"I:\Games\Fractured Online\app";
 
     private static void Main()
     {
