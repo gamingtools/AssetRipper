@@ -35,9 +35,10 @@ internal class Program
     private static readonly HashSet<string> ClassNames = ["MonoBehaviour", "Texture2D", "TextAsset", "GameObject", "Transform", "Sprite"];
     //private const string OutputFolder = @"F:\StarsReach\Extracted";
     //private const string AssetsPath = @"I:\SteamLibrary\steamapps\common\StarsReach";
+    //private const string OutputFolder = @"F:\Pantheon\Data";
     private const string OutputFolder = @"F:\Fractured\Data";
-    private const string AssetsPath = @"I:\Games\Fractured Online\app\UnityClient@Windows_Data";
-    //private const string AssetsPath = @"I:\Games\Fractured Online\app\UnityClient@Windows_Data\resources.assets";
+    //private const string AssetsPath = @"I:\Games\Pantheon\App\Pantheon_Data";
+    private const string AssetsPath = @"I:\Games\Fractured Online\app\UnityClient@Windows_Data\resources.assets";
 
     private static void Main()
     {
